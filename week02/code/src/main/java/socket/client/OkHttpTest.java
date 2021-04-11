@@ -10,7 +10,7 @@ import java.io.InputStream;
 
 public class OkHttpTest {
     private static final OkHttpClient CLIENT = new OkHttpClient();
-    private static final String URL = "http://localhost:8081";
+    private static final String URL = "http://localhost:8802";
 
     public static void main(String[] args) {
         Request request = new Request.Builder()
@@ -19,13 +19,7 @@ public class OkHttpTest {
 
         try (Response response = CLIENT.newCall(request).execute()) {
             ResponseBody body = response.body();
-            if (body != null) {
-                try (InputStream is = body.byteStream()) {
-                    byte[] buffer = new byte[1024];
-                    is.read(buffer);
-                    System.out.println(new String(buffer));
-                }
-            }
+            System.out.println(body.string());
         } catch (IOException e) {
             e.printStackTrace();
         }

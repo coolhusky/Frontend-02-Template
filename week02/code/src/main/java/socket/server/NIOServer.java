@@ -96,12 +96,13 @@ public class NIOServer implements Runnable {
                     byte[] bytes = new byte[readBuffer.remaining()];
                     readBuffer.get(bytes);
                     System.out.println("get request: " + new String(bytes));
-                    String body = "";
-                    body += "HTTP/1.1 200 OK\n";
-                    body += "Content-Type:text/html;charset=utf-8\n";
-                    body += "Content-Length:" + body.getBytes().length + "\n\n";
-                    body += "hello, nio";
-                    doWrite(sc, body);
+                    String resp = "";
+                    resp += "HTTP/1.1 200 OK\n";
+                    resp += "Content-Type:text/html;charset=utf-8\n";
+                    String body = "hello, nio";
+                    resp += "Content-Length:" + body.getBytes().length + "\n\n";
+                    resp += body;
+                    doWrite(sc, resp);
                     key.cancel();
                     sc.close();
                 } else if (readBytes < 0) {
