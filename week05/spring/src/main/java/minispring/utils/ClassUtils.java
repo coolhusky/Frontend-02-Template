@@ -1,28 +1,60 @@
 package minispring.utils;
 
 import minispring.exception.MiniSpringRuntimeException;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.annotation.Annotation;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
 import java.net.JarURLConnection;
 import java.net.URL;
-import java.util.Enumeration;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
+import java.util.stream.Collectors;
 
 /**
  * @author jcwang
  */
 public class ClassUtils {
+    private static final String ROOT = StringUtils.EMPTY;
     private static final Logger LOGGER = LoggerFactory.getLogger(ClassUtils.class);
+    private static final Map<String, Set<Class<?>>> LOAD_CACHE = new ConcurrentHashMap<>(16);
 
     private ClassUtils() {
     }
+
+    public static boolean isAnnotated(Class<?> clazz, Class<? extends Annotation> annotationClass) {
+        return clazz.isAnnotationPresent(annotationClass);
+    }
+
+
+    public static boolean isCollection(Class<?> clazz) {
+        return isAssignedFrom(clazz, Collection.class);
+    }
+
+    public static Class<?> getCollGenericType(Class<?> collClass, Type genericType) {
+        if (!(genericType instanceof ParameterizedType)) {
+            throw new MiniSpringRuntimeException("generic type not specified");
+        }
+
+        return (Class<?>) ((ParameterizedType) genericType).getActualTypeArguments()[0];
+    }
+
+    public static boolean isAssignedFrom(Class<?> sub, Class<?> sup) {
+        return sup.isAssignableFrom(sub);
+    }
+
+    public static boolean equals(Class<?> clsA, Class<?> clsB) {
+        return Objects.equals(clsA, clsB);
+    }
+
 
     public static ClassLoader getClassLoader() {
         return Thread.currentThread().getContextClassLoader();
@@ -43,8 +75,23 @@ public class ClassUtils {
         return cls;
     }
 
+    public static Set<Class<?>> loadSubclasses(Class<?> superClass,String... basePackages) {
+        Set<Class<?>> allClasses = loadClasses(basePackages);
+        return allClasses.stream().filter(cls -> isAssignedFrom(cls, superClass)).collect(Collectors.toSet());
+    }
+
+    public static Set<Class<?>> loadClasses(String... packageNames) {
+        Set<Class<?>> classSet = new HashSet<>(16);
+        for (String packageName : packageNames) {
+            classSet.addAll(loadClasses(packageName));
+        }
+        return classSet;
+    }
 
     public static Set<Class<?>> loadClasses(String packageName) {
+        if (LOAD_CACHE.containsKey(packageName)) {
+            return LOAD_CACHE.get(packageName);
+        }
         Set<Class<?>> classSet = new HashSet<>(16);
         try {
             Enumeration<URL> urls = getClassLoader().getResources(packageName.replace(".", "/"));
@@ -80,7 +127,8 @@ public class ClassUtils {
             LOGGER.error("load classes", e);
             throw new MiniSpringRuntimeException(e);
         }
-        return classSet;
+        LOAD_CACHE.put(packageName, classSet);
+        return Collections.unmodifiableSet(classSet);
     }
 
     private static void addClass(Set<Class<?>> classSet, String packagePath, String packageName) {

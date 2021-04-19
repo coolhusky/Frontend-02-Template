@@ -1,5 +1,6 @@
 package minispring.beans;
 
+import minispring.beans.impl.BeanAlteredImpl;
 import minispring.exception.MiniSpringException;
 
 /**
@@ -7,11 +8,15 @@ import minispring.exception.MiniSpringException;
  */
 public interface BeanPostProcessor {
 
-    default Object postProcessBeforeInitialization(Object bean, String beanName) throws MiniSpringException {
-        return bean;
+    default void beforeInstantiation(Class<?> beanClass, String beanName) throws MiniSpringException {
+
     }
 
-    default Object postProcessAfterInitialization(Object bean, String beanName) throws MiniSpringException {
-        return bean;
+    default BeanAltered postProcessBeforeInitialization(Object bean, String beanName) throws MiniSpringException {
+        return new BeanAlteredImpl(bean);
+    }
+
+    default BeanAltered postProcessAfterInitialization(Object bean, String beanName) throws MiniSpringException {
+        return new BeanAlteredImpl(bean);
     }
 }

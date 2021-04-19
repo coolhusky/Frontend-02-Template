@@ -3,7 +3,7 @@ package minispring.beans;
 /**
  * @author jcwang
  */
-public interface BeanDefinition {
+public interface  BeanDefinition extends AttributeAccessor{
 
     String getName();
 

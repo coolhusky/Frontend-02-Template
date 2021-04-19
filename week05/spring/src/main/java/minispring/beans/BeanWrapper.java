@@ -5,6 +5,10 @@ package minispring.beans;
  */
 public interface BeanWrapper {
 
+    boolean isProxy();
+
+
+    void setProxy(Object proxy);
 
     String getBeanName();
 
