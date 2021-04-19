@@ -1,0 +1,13 @@
+example:
+  autoconfig:
+    students:
+      - id: 1
+        name: student001
+      - id: 2
+        name: student002
+    klass:
+      enabled: true
+
+    school:
+      enabled: true
+
